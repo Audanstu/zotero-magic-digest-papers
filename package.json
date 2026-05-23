@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "description": "AI-powered academic paper reading assistant. Deep PDF integration with structured cards, vision figure analysis, and smart anchor positioning.",
-  "update_url": "https://raw.githubusercontent.com/magic-digest/zotero-magic-digest/main/update.json",
+  "update_url": "https://raw.githubusercontent.com/Audanstu/zotero-magic-digest/main/update.json",
   "config": {
     "addonName": "magic-digest",
     "addonID": "magic-digest@local",
