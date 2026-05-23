@@ -91,3 +91,7 @@ This plugin was developed with assistance from the **DeepSeek** AI model for cod
 ## License
 
 AGPL-3.0-or-later
+
+---
+
+**Contributions welcome!** Feel free to open issues, submit PRs, or share your ideas — let's make magic-digest better together.

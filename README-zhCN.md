@@ -80,3 +80,7 @@ AI 驱动的 Zotero 学术论文阅读助手。
 ## 开源协议
 
 AGPL-3.0-or-later
+
+---
+
+**欢迎协作！** 欢迎提交 Issue、PR 或分享你的想法，一起把 magic-digest 做得更好。
