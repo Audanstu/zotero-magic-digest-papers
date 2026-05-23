@@ -95,3 +95,7 @@ AGPL-3.0-or-later
 ---
 
 **Contributions welcome!** Feel free to open issues, submit PRs, or share your ideas — let's make magic-digest better together.
+
+---
+
+**Notice:** Please respect the author's work. Commercial use is not permitted without prior authorization. For commercial licensing, please contact via QQ: **2472932478** (state your purpose clearly).

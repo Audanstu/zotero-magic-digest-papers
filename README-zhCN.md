@@ -23,7 +23,7 @@ AI 驱动的 Zotero 学术论文阅读助手。
 - **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** 插件 — 用于 MinerU PDF 版面解析（必须先安装）
 =======
 - 需搭配llm-for-zotero插件来使用
->>>>>>> 5753c6d0f1f8da6d4250b1da9c22f9fef29c5479
+
 - 至少一个 AI API Key：
   - DeepSeek（文本分析）
   - 火山引擎 Ark（文本 + 视觉分析）
@@ -88,3 +88,7 @@ AGPL-3.0-or-later
 ---
 
 **欢迎协作！** 欢迎提交 Issue、PR 或分享你的想法，一起把 magic-digest 做得更好。
+
+---
+
+**声明：** 请尊重他人劳动成果，未经授权不得将本作品用于商业用途。如需商业合作，请通过 QQ **2472932478** 联系本人，并备注来意。
