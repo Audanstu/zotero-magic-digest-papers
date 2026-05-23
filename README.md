@@ -1,5 +1,7 @@
 # magic-digest
 
+> [中文说明](README-zhCN.md)
+
 AI-powered academic paper reading assistant for Zotero.
 
 Deep PDF integration with structured floating cards, vision figure analysis, and smart anchor positioning — all inside your PDF reader.
