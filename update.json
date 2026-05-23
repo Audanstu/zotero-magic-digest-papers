@@ -1,0 +1,17 @@
+{
+  "addons": {
+    "magic-digest@local": {
+      "updates": [
+        {
+          "version": "1.0.0",
+          "update_link": "https://github.com/Audanstu/zotero-magic-digest/releases/download/v1.0.0/magic-digest.xpi",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "7.0"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
