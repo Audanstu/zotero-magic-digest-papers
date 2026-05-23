@@ -19,6 +19,7 @@ AI 驱动的 Zotero 学术论文阅读助手。
 ## 安装要求
 
 - Zotero 7+
+- **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** 插件 — 用于 MinerU PDF 版面解析（必须先安装）
 - 至少一个 AI API Key：
   - DeepSeek（文本分析）
   - 火山引擎 Ark（文本 + 视觉分析）
@@ -42,6 +43,8 @@ AI 驱动的 Zotero 学术论文阅读助手。
 ## 使用
 
 ### 快速开始
+
+**前提：** 先用 **llm-for-zotero** 对 PDF 执行 MinerU 解析（右键 → llm-for-zotero → MinerU 解析）。
 
 1. 在 Zotero 中选中一个 PDF 附件或其父条目
 2. 右键 → `magic-digest ✨：生成全文结构化分析`

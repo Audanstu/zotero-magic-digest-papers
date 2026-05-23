@@ -21,7 +21,8 @@ Deep PDF integration with structured floating cards, vision figure analysis, and
 ## Requirements
 
 - Zotero 7+
-- At least one of:
+- **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** — required for MinerU PDF layout parsing
+- At least one AI API key:
   - DeepSeek API key (for text analysis)
   - Volcengine Ark API key (for vision analysis)
   - Qwen DashScope API key (for vision analysis)
@@ -44,6 +45,8 @@ Deep PDF integration with structured floating cards, vision figure analysis, and
 ## Usage
 
 ### Quick Start
+
+**Prerequisite:** First use **llm-for-zotero** to run MinerU analysis on your PDF (right-click → llm-for-zotero → MinerU 解析).
 
 1. Select a PDF attachment or its parent item in Zotero
 2. Right-click → `magic-digest ✨：生成全文结构化分析`
