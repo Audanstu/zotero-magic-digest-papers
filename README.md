@@ -29,7 +29,7 @@ Deep PDF integration with structured floating cards, vision figure analysis, and
 
 ## Installation
 
-1. Download `magic-digest.xpi` from [Releases](https://github.com/magic-digest/zotero-magic-digest/releases)
+1. Download `magic-digest.xpi` from [Releases](https://github.com/Audanstu/zotero-magic-digest/releases)
 2. Open Zotero → Tools → Add-ons → gear icon → Install Add-on From File
 3. Select the XPI file
 
