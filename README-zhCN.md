@@ -19,7 +19,11 @@ AI 驱动的 Zotero 学术论文阅读助手。
 ## 安装要求
 
 - Zotero 7+
+<<<<<<< HEAD
 - **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** 插件 — 用于 MinerU PDF 版面解析（必须先安装）
+=======
+- 需搭配llm-for-zotero插件来使用
+>>>>>>> 5753c6d0f1f8da6d4250b1da9c22f9fef29c5479
 - 至少一个 AI API Key：
   - DeepSeek（文本分析）
   - 火山引擎 Ark（文本 + 视觉分析）
