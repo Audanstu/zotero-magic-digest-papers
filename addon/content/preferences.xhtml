@@ -1,33 +1,172 @@
-<linkset>
-  <html:link rel="localization" href="__addonRef__-preferences.ftl" />
-</linkset>
-<groupbox
-  onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
+<vbox
+  id="my-vibero-preferences-pane"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  flex="1"
+  onload="Zotero.MyViberoPreferencePane.init(document)"
 >
-  <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
-  <checkbox
-    id="zotero-prefpane-__addonRef__-enable"
-    preference="enable"
-    data-l10n-id="pref-enable"
-  />
-  <hbox>
-    <html:label
-      for="zotero-prefpane-__addonRef__-input"
-      data-l10n-id="pref-input"
-    ></html:label>
-    <html:input
-      type="text"
-      id="zotero-prefpane-__addonRef__-input"
-      preference="input"
-    ></html:input>
-  </hbox>
-  <hbox class="virtualized-table-container" flex="1" height="300px">
-    <html:div id="__addonRef__-table-container" />
-  </hbox>
-</groupbox>
-<vbox>
-  <html:label
-    data-l10n-id="pref-help"
-    data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
-  ></html:label>
+  <html:div
+    id="mv-root"
+    style="
+      padding:16px;
+      max-width:960px;
+      font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;
+    "
+  >
+    <html:h2>my_vibero 设置</html:h2>
+
+    <html:div
+      id="mv-msg"
+      style="
+        margin:8px 0 12px 0;
+        padding:8px 10px;
+        border:1px solid var(--fill-quinary);
+        border-radius:6px;
+        background:var(--material-background);
+      "
+    >
+      正在初始化...
+    </html:div>
+
+    <html:div
+      style="
+        margin:8px 0 12px 0;
+        padding:8px 10px;
+        border:1px solid var(--fill-quinary);
+        border-radius:6px;
+        background:var(--material-background);
+        color:var(--fill-secondary);
+        font-size:12px;
+        line-height:1.5;
+      "
+    >
+      <html:div><html:b>API 设置说明：</html:b></html:div>
+      <html:div>1. 默认显示 3 个 API 配置槽。</html:div>
+      <html:div>2. 点击“添加模型 API”可以新增配置。</html:div>
+      <html:div>3. 最多支持 8 个 API 配置。</html:div>
+      <html:div>4. 每个 API 都可以自定义名称，并可设为默认解析模型。</html:div>
+    </html:div>
+
+    
+    <html:div
+      id="mv-reader-settings-static"
+      style="
+        margin:12px 0 16px 0;
+        padding:12px;
+        border:1px solid var(--fill-quinary);
+        border-radius:8px;
+        background:var(--material-background);
+      "
+    >
+      <html:h3 style="margin-top:0;">Reader 卡片显示设置</html:h3>
+
+      <html:label>默认排序</html:label>
+      <html:br />
+      <html:select id="mv-reader-default-sort" style="width:240px;margin:4px 0 10px 0;">
+        <html:option value="page">按页排序</html:option>
+        <html:option value="type">按类型排序</html:option>
+        <html:option value="title">按标题排序</html:option>
+      </html:select>
+
+      <html:br />
+
+      <html:label>Reader 语言</html:label>
+      <html:br />
+      <html:select id="mv-reader-ui-language" style="width:240px;margin:4px 0 10px 0;">
+        <html:option value="auto">自动</html:option>
+        <html:option value="zh">中文</html:option>
+        <html:option value="en">English</html:option>
+      </html:select>
+
+      <html:br />
+
+      <html:label>卡片类型颜色 JSON</html:label>
+      <html:textarea
+        id="mv-reader-card-type-colors"
+        style="
+          width:100%;
+          height:140px;
+          box-sizing:border-box;
+          margin:4px 0 10px 0;
+          font-family:monospace;
+          font-size:12px;
+        "
+      ></html:textarea>
+
+      <html:label>标签颜色 JSON</html:label>
+      <html:textarea
+        id="mv-reader-tag-colors"
+        style="
+          width:100%;
+          height:120px;
+          box-sizing:border-box;
+          margin:4px 0 10px 0;
+          font-family:monospace;
+          font-size:12px;
+        "
+      ></html:textarea>
+
+      <html:div style="font-size:12px;color:var(--fill-secondary);margin-bottom:8px;">
+        颜色格式为 #RRGGBB。保存后请关闭并重新打开 PDF 卡片层。
+      </html:div>
+
+      <html:button
+        id="mv-reader-save"
+        type="button"
+        style="
+          background:#2563eb;
+          color:white;
+          border:0;
+          border-radius:6px;
+          padding:6px 12px;
+          cursor:pointer;
+        "
+      >
+        保存 Reader 显示设置
+      </html:button>
+
+      <html:span id="mv-reader-msg" style="margin-left:10px;"></html:span>
+    </html:div>
+
+    <html:div id="mv-list"></html:div>
+
+    <html:div
+      style="
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+        margin-top:12px;
+      "
+    >
+      <html:button
+        id="mv-add"
+        type="button"
+        style="
+          background:#0369a1;
+          color:white;
+          border:0;
+          border-radius:6px;
+          padding:6px 12px;
+          cursor:pointer;
+        "
+      >
+        + 添加模型 API
+      </html:button>
+
+      <html:button
+        id="mv-save"
+        type="button"
+        style="
+          background:#16a34a;
+          color:white;
+          border:0;
+          border-radius:6px;
+          padding:6px 12px;
+          cursor:pointer;
+        "
+      >
+        保存模型设置
+      </html:button>
+    </html:div>
+  </html:div>
 </vbox>

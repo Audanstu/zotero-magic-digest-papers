@@ -14,3 +14,54 @@ tsconfig.tsbuildinfo
 .scaffold
 build
 logs
+
+# XPI builds (keep only magic-digest.xpi)
+*.xpi
+!magic-digest.xpi
+
+# Backup / stable files
+*.bak
+*.bak-*
+*.stable-*
+.last-before-deploy.bak
+
+# Old scripts and patches in root
+add_*.cjs
+fix_*.cjs
+force_*.cjs
+patch_*.cjs
+generate_*.cjs
+enrich_*.cjs
+debug_*.cjs
+check_*.cjs
+clear_*.cjs
+inspect_*.cjs
+scan_*.cjs
+reset_*.cjs
+restore_*.cjs
+stabilize_*.cjs
+switch_*.cjs
+localize_*.cjs
+final*.cjs
+f*.cjs
+bind_*.cjs
+disable_*.cjs
+enhance_*.cjs
+floating_*.cjs
+remove_*.cjs
+
+# Temp / reports
+*.txt
+*.ps1
+*.bat
+
+# Packaged archives
+*.zip
+
+# Data directories (may contain local paths)
+backup_ts/
+_xpi_check/
+my_vibero@0.1.0/
+
+# Deploy backup
+*.last-before-deploy.bak
