@@ -84,6 +84,10 @@ npm run build
 # XPI output: .scaffold/build/magic-digest.xpi
 ```
 
+## Credits
+
+This plugin was developed with assistance from the **DeepSeek** AI model for code generation and design.
+
 ## License
 
 AGPL-3.0-or-later

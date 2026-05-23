@@ -73,6 +73,10 @@ AI 驱动的 Zotero 学术论文阅读助手。
 - `vision.json` — 视觉图表分析结果
 - `reading-card-draft.md` — 阅读卡片草稿
 
+## 制作说明
+
+本插件的部分代码和设计由 **DeepSeek** AI 模型辅助完成。
+
 ## 开源协议
 
 AGPL-3.0-or-later
