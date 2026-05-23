@@ -1,9 +1,9 @@
 <vbox
-  id="my-vibero-preferences-pane"
+  id="magic-digest-preferences-pane"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
   flex="1"
-  onload="Zotero.MyViberoPreferencePane.init(document)"
+  onload="Zotero.MagicDigestPreferencePane.init(document)"
 >
   <html:div
     id="mv-root"
@@ -126,6 +126,58 @@
       </html:button>
 
       <html:span id="mv-reader-msg" style="margin-left:10px;"></html:span>
+    </html:div>
+
+    <!-- 数据目录设置 -->
+    <html:div
+      id="mv-data-dir-section"
+      style="
+        margin:12px 0 16px 0;
+        padding:12px;
+        border:1px solid var(--fill-quinary);
+        border-radius:8px;
+        background:var(--material-background);
+      "
+    >
+      <html:h3 style="margin-top:0;">数据存储目录</html:h3>
+
+      <html:label for="mv-data-dir">magic-digest 分析数据根目录</html:label>
+      <html:br />
+      <html:input
+        id="mv-data-dir"
+        type="text"
+        style="
+          width:100%;
+          box-sizing:border-box;
+          margin:4px 0 6px 0;
+          padding:6px 8px;
+          border:1px solid var(--fill-quinary);
+          border-radius:6px;
+          font-family:monospace;
+          font-size:13px;
+        "
+      />
+
+      <html:div style="font-size:12px;color:var(--fill-secondary);margin-bottom:6px;">
+        分析结果（analysis.json / vision.json 等）将保存在此目录下，按附件 ID 分文件夹。
+      </html:div>
+
+      <html:button
+        id="mv-data-dir-save"
+        type="button"
+        style="
+          background:#2563eb;
+          color:white;
+          border:0;
+          border-radius:6px;
+          padding:6px 12px;
+          cursor:pointer;
+        "
+      >
+        保存数据目录
+      </html:button>
+
+      <html:span id="mv-data-dir-msg" style="margin-left:10px;font-size:13px;"></html:span>
     </html:div>
 
     <html:div id="mv-list"></html:div>

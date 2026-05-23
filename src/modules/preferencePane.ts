@@ -1125,11 +1125,45 @@ function bindStaticReaderSettingsControls(doc: Document): void {
   });
 }
 
+function bindDataDirSetting(doc: Document) {
+  const input = doc.getElementById("mv-data-dir") as HTMLInputElement | null;
+  const saveBtn = doc.getElementById("mv-data-dir-save") as HTMLButtonElement | null;
+  const msg = doc.getElementById("mv-data-dir-msg") as HTMLElement | null;
+  if (!input || !saveBtn) return;
+
+  const PREF_KEY = "extensions.zotero.my_vibero.magicDigest.dataRootDir";
+
+  const current = String(Zotero.Prefs.get(PREF_KEY, true) || "").trim();
+  input.value = current || "";
+
+  saveBtn.addEventListener("click", () => {
+    try {
+      const val = input.value.trim();
+      Zotero.Prefs.set(PREF_KEY, val, true);
+      if (msg) {
+        msg.textContent = "✅ 已保存";
+        msg.style.color = "#16a34a";
+        setTimeout(function () { msg.textContent = ""; }, 2000);
+      }
+    } catch (e: any) {
+      if (msg) {
+        msg.textContent = "❌ 保存失败：" + (e?.message || String(e));
+        msg.style.color = "#dc2626";
+      }
+    }
+  });
+}
+
 export function initMagicDigestPreferencePane(doc: Document) {
   try {
     bindStaticReaderSettingsControls(doc);
   } catch (e) {
     ztoolkit.log("magic_digest bind static reader settings failed", e);
+  }
+  try {
+    bindDataDirSetting(doc);
+  } catch (e) {
+    ztoolkit.log("magic_digest bind data dir setting failed", e);
   }
   try {
     const root = doc.getElementById("mv-root") as HTMLElement | null;
@@ -1144,7 +1178,7 @@ export function initMagicDigestPreferencePane(doc: Document) {
     render(doc);
     bind(doc);
   } catch (e: any) {
-    setMsg(doc, `初始化失败：${e?.message || String(e)}`, "fail");
+    setMsg(doc, "初始化失败：" + (e?.message || String(e)), "fail");
   }
 
   try {
@@ -1153,3 +1187,5 @@ export function initMagicDigestPreferencePane(doc: Document) {
     ztoolkit.log("magic_digest render reader display settings failed", e);
   }
 }
+
+// ----- end of file marker (do not remove) -----
