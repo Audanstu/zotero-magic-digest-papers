@@ -3000,55 +3000,52 @@ function locateNeedleOnPage(
   const spans = getTextLayerSpans(pageEl);
   if (!spans.length) return null;
 
-  const entries: Array<{
-    el: HTMLElement;
-    start: number;
-    end: number;
-    text: string;
-  }> = [];
-
-  let pageText = "";
+  // Build two versions: space-separated and concatenated.
+  let pageTextSpaced = "";
+  let pageTextConcat = "";
+  const entries: Array<{ el: HTMLElement; start: number; end: number }> = [];
+  const entriesConcat: Array<{ el: HTMLElement; start: number; end: number }> = [];
 
   for (const el of spans) {
     const raw = String(el.textContent || "");
     const norm = normalizeForAutoLocate(raw);
     if (!norm) continue;
 
-    const start = pageText.length;
-    pageText += (pageText ? " " : "") + norm;
-    const end = pageText.length;
+    const startS = pageTextSpaced.length;
+    pageTextSpaced += (pageTextSpaced ? " " : "") + norm;
+    entries.push({ el, start: startS, end: pageTextSpaced.length });
 
-    entries.push({
-      el,
-      start,
-      end,
-      text: norm,
-    });
+    const startC = pageTextConcat.length;
+    pageTextConcat += norm;
+    entriesConcat.push({ el, start: startC, end: pageTextConcat.length });
   }
 
-  if (!pageText || !needle) return null;
+  if (!needle) return null;
 
-  let start = pageText.indexOf(needle);
+  // Try matching against both text versions.
+  // pageTextSpaced: good for word-level spans (space between words)
+  // pageTextConcat: good for per-character spans (leading to no artificial spaces)
+  let start = -1;
   let usedNeedle = needle;
+  let bestPageText = pageTextSpaced;
 
-  // Fast path: exact match
-  if (start >= 0) {
-    // exact match found, proceed below
-  } else {
-    // Word-level n-gram matching
+  const tryMatch = (pt: string): number => {
+    if (!pt) return -1;
+
+    // Try exact
+    let pos = pt.indexOf(needle);
+    if (pos >= 0) return pos;
+
+    // Word-level n-gram matching (only for spaced version)
     const needleWords = needle.split(/\s+/).filter(Boolean);
-    const pageWords = pageText.split(/\s+/).filter(Boolean);
+    const ngramLen = Math.min(5, needleWords.length);
+    const minMatchCount = Math.max(2, Math.floor(needleWords.length * 0.5));
 
-    if (needleWords.length >= 2 && pageWords.length >= needleWords.length) {
-      const ngramLen = Math.min(5, needleWords.length);
-      const minMatchCount = Math.max(2, Math.floor(needleWords.length * 0.5));
-
-      // Build n-grams from needle
+    if (needleWords.length >= 2) {
       const ngrams: string[] = [];
       for (let i = 0; i <= needleWords.length - ngramLen; i++) {
         ngrams.push(needleWords.slice(i, i + ngramLen).join(" "));
       }
-      // Also add shorter leading n-grams
       ngrams.push(needleWords.slice(0, Math.min(3, needleWords.length)).join(" "));
       ngrams.push(needleWords.slice(0, Math.min(4, needleWords.length)).join(" "));
 
@@ -3056,51 +3053,52 @@ function locateNeedleOnPage(
       let bestScore = 0;
 
       for (const ng of ngrams) {
-        const pos = pageText.indexOf(ng);
-        if (pos < 0) continue;
+        const ngPos = pt.indexOf(ng);
+        if (ngPos < 0) continue;
 
-        // Score: count how many needle words appear in a window around this position
-        const windowStart = Math.max(0, pos - 40);
-        const windowEnd = Math.min(pageText.length, pos + ng.length + 40);
-        const windowText = pageText.slice(windowStart, windowEnd);
+        const windowStart = Math.max(0, ngPos - 40);
+        const windowEnd = Math.min(pt.length, ngPos + ng.length + 40);
+        const windowText = pt.slice(windowStart, windowEnd);
         const windowWords = windowText.split(/\s+/);
 
         let score = 0;
         for (const nw of needleWords) {
           if (windowWords.some((w) => w === nw)) score++;
         }
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestPos = pos;
-        }
+        if (score > bestScore) { bestScore = score; bestPos = ngPos; }
       }
 
-      if (bestPos >= 0 && bestScore >= minMatchCount) {
-        start = bestPos;
-        usedNeedle = pageText.slice(start, start + Math.min(needle.length, pageText.length - start));
-      }
+      if (bestPos >= 0 && bestScore >= minMatchCount) return bestPos;
     }
 
     // Short prefix fallback
-    if (start < 0 && needle.length > 36) {
-      const shortNeedle = needle.slice(0, 36).trim();
-      start = pageText.indexOf(shortNeedle);
-      usedNeedle = shortNeedle;
+    if (needle.length > 36) {
+      pos = pt.indexOf(needle.slice(0, 36).trim());
+      if (pos >= 0) return pos;
+    }
+    if (needle.length > 20) {
+      pos = pt.indexOf(needle.slice(0, 20).trim());
+      if (pos >= 0) return pos;
     }
 
-    if (start < 0 && needle.length > 20) {
-      const shortNeedle = needle.slice(0, 20).trim();
-      start = pageText.indexOf(shortNeedle);
-      usedNeedle = shortNeedle;
-    }
+    return -1;
+  };
+
+  // Try spaced text first (better for word-level)
+  let matchedEntries = entries;
+  start = tryMatch(pageTextSpaced);
+
+  // If not found, try concatenated (better for per-char spans)
+  if (start < 0 && pageTextConcat) {
+    start = tryMatch(pageTextConcat);
+    matchedEntries = entriesConcat;
   }
 
   if (start < 0) return null;
 
-  const end = start + usedNeedle.length;
+  const end = start + needle.length;
 
-  const matchedSpans = entries
+  const matchedSpans = matchedEntries
     .filter((e) => e.end >= start && e.start <= end)
     .map((e) => e.el.getBoundingClientRect())
     .filter((r) => r.width > 0 && r.height > 0);
@@ -3139,21 +3137,13 @@ function autoLocateUnresolvedCards(
 
   if (!pageEls.length) return 0;
 
-  const totalUnresolvedBefore = (analysis.pageCards || []).reduce(
-    (sum, pc) => sum + [...(pc.left || []), ...(pc.right || [])].filter(isUnresolvedCard).length,
-    0,
-  );
-
   let located = 0;
-  let scanned = 0;
-  const failedSamples: string[] = [];
 
   for (const pc of analysis.pageCards || []) {
     const cards = [...(pc.left || []), ...(pc.right || [])];
 
     for (const card of cards) {
       if (!isUnresolvedCard(card)) continue;
-      scanned++;
 
       const needles = makeAutoLocateNeedles(card);
       if (!needles.length) continue;
@@ -3214,29 +3204,7 @@ function autoLocateUnresolvedCards(
         }
 
         located++;
-      } else {
-        // Collect failure samples for debugging
-        if (failedSamples.length < 5) {
-          const anchorText = String((card as any).anchorText || card.title || "").slice(0, 80);
-          const page = card.page ?? -1;
-          failedSamples.push(`p${page}: "${anchorText}"`);
-        }
       }
-    }
-  }
-
-  // Log diagnostics
-  if (totalUnresolvedBefore > 0) {
-    ztoolkit.log(
-      `magic_digest auto-locate: scanned ${scanned}, resolved ${located}/${totalUnresolvedBefore}. ` +
-      (failedSamples.length ? `Failed samples: ${failedSamples.join(" | ")}` : "All resolved")
-    );
-
-    // Dump first page text for debugging
-    const pageEls2 = Array.from(doc.querySelectorAll(".page")) as HTMLElement[];
-    if (pageEls2.length > 0) {
-      const p0Text = collectPageSnippet(pageEls2[0], 400);
-      ztoolkit.log(`magic_digest page-0 text (first 400 chars): ${p0Text}`);
     }
   }
 
@@ -4251,9 +4219,6 @@ async function toggleViberoOverlay(reader: any, doc: Document) {
 
   // 自动定位未解析的卡片
   const autoLocated = autoLocateUnresolvedCards(reader, doc, analysis);
-  if (autoLocated > 0) {
-    ztoolkit.log(`magic_digest: auto-located ${autoLocated} previously unresolved cards`);
-  }
 
   readCollapsedStatePreference(reader, doc);
 
