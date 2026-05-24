@@ -4206,6 +4206,12 @@ async function toggleViberoOverlay(reader: any, doc: Document) {
   state.analysis = analysis;
   state.attachmentItemID = attachmentItemID;
 
+  // 自动定位未解析的卡片
+  const autoLocated = autoLocateUnresolvedCards(reader, doc, analysis);
+  if (autoLocated > 0) {
+    ztoolkit.log(`magic_digest: auto-located ${autoLocated} previously unresolved cards`);
+  }
+
   readCollapsedStatePreference(reader, doc);
 
   const savedHideUnresolvedPreference = readReaderBooleanPreference(reader, doc, "hideUnresolved");
