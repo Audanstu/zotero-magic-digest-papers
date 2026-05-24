@@ -4167,6 +4167,54 @@ async function toggleViberoOverlay(reader: any, doc: Document) {
 export function registerReaderIntegration() {
   if (registered) return;
 
+  function addLangToggleButton(doc: Document, container: HTMLElement) {
+    if (doc.getElementById("magic-digest-lang-toggle")) return;
+
+    const langPrefKey = "extensions.zotero.my_vibero.analysisLanguage";
+    const getLang = () => {
+      try {
+        const v = String(Zotero.Prefs.get(langPrefKey, true) || "").trim();
+        return v === "en" ? "en" : "zh";
+      } catch {
+        return "zh";
+      }
+    };
+
+    const langBtn = doc.createElement("button");
+    langBtn.id = "magic-digest-lang-toggle";
+    const update = () => {
+      langBtn.textContent = getLang() === "en" ? "EN" : "中";
+      langBtn.title = getLang() === "en" ? "Switch to Chinese analysis" : "切换为英文分析";
+    };
+    update();
+
+    langBtn.setAttribute(
+      "style",
+      [
+        "font-size:12px",
+        "padding:3px 8px",
+        "margin-left:4px",
+        "border-radius:6px",
+        "border:1px solid #475569",
+        "background:#1e293b",
+        "color:#e2e8f0",
+        "cursor:pointer",
+      ].join(";"),
+    );
+
+    langBtn.addEventListener("click", () => {
+      try {
+        const next = getLang() === "en" ? "zh" : "en";
+        Zotero.Prefs.set(langPrefKey, next, true);
+        update();
+      } catch {
+        // ignore
+      }
+    });
+
+    container.insertBefore(langBtn, container.firstChild);
+  }
+
   try {
     const Reader = (Zotero as any).Reader;
 
@@ -4183,7 +4231,14 @@ export function registerReaderIntegration() {
         return;
       }
 
-      if (doc.getElementById("magic-digest-toolbar-button")) {
+      const existingContainer = doc.getElementById("magic-digest-toolbar-button");
+      if (existingContainer && doc.getElementById("magic-digest-lang-toggle")) {
+        return; // 已有语言按钮，无需重渲染
+      }
+
+      if (existingContainer) {
+        // 工具栏已存在，只需追加语言按钮
+        addLangToggleButton(doc, existingContainer);
         return;
       }
 
@@ -4225,37 +4280,7 @@ export function registerReaderIntegration() {
         });
       });
 
-      // 中/英语言切换按钮
-      const langPrefKey = "extensions.zotero.my_vibero.analysisLanguage";
-      const getLang = () => {
-        const v = String(Zotero.Prefs.get(langPrefKey, true) || "").trim();
-        return v === "en" ? "en" : "zh";
-      };
-      const langBtn = doc.createElement("button");
-      const updateLangBtn = () => {
-        langBtn.textContent = getLang() === "en" ? "EN" : "中";
-        langBtn.title = getLang() === "en" ? "Switch to Chinese analysis" : "切换为英文分析";
-      };
-      updateLangBtn();
-      langBtn.setAttribute(
-        "style",
-        [
-          "font-size:12px",
-          "padding:3px 8px",
-          "margin-left:4px",
-          "border-radius:6px",
-          "border:1px solid #475569",
-          "background:#1e293b",
-          "color:#e2e8f0",
-          "cursor:pointer",
-        ].join(";"),
-      );
-      langBtn.addEventListener("click", () => {
-        const next = getLang() === "en" ? "zh" : "en";
-        Zotero.Prefs.set(langPrefKey, next, true);
-        updateLangBtn();
-      });
-      container.appendChild(langBtn);
+      addLangToggleButton(doc, container);
 
       container.appendChild(btn);
       append(container);
