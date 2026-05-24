@@ -1,110 +1,106 @@
 # magic-digest
 
-> [中文说明](README-zhCN.md)
+AI 驱动的 Zotero 学术论文阅读助手。
 
-AI-powered academic paper reading assistant for Zotero.
+在 PDF 阅读器中直接生成结构化浮动卡片，支持图表视觉分析、智能锚点定位。
 
-Deep PDF integration with structured floating cards, vision figure analysis, and smart anchor positioning — all inside your PDF reader.
+## 功能
 
-## Features
+- **AI 结构化分析** — 逐页分析论文，生成洞察卡片（背景、方法、结果、图表、术语、局限、对比、引用）
 
-- **AI Structured Analysis** — Reads your paper page-by-page and generates insight cards (background, method, result, figure, table, term, limitation, comparison, quote)
-- **Vision Figure Analysis** — Analyzes figures/charts/tables with multimodal AI (supports Volcengine & Qwen vision models)
-- **Smart Anchor Positioning** — Cards are placed directly next to their source text in the PDF using layout analysis
-- **Auto Column Detection** — Automatically detects single/double-column PDF layouts
-- **Card Filter & Search** — Real-time keyword search and type-based filtering
-- **Batch Operations** — Collapse/expand all, hide unresolved cards
-- **Connector Lines** — Visual links between cards and their anchor positions
-- **Drag to Reposition** — Manually adjust card positions
-- **Multi-Model Support** — DeepSeek, Volcengine, Qwen, and OpenAI-compatible APIs
+- **图表视觉分析** — 用多模态 AI 分析论文中的图表（支持火山引擎 & 千问视觉模型）
 
-## Requirements
+- **智能锚点定位** — 卡片精确贴在 PDF 原文旁边，基于版面分析 + 模糊文本匹配
 
-- Zotero 7+
-- **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** — required for MinerU PDF layout parsing
-- At least one AI API key:
-  - DeepSeek API key (for text analysis)
-  - Volcengine Ark API key (for vision analysis)
-  - Qwen DashScope API key (for vision analysis)
+- **自动单双栏检测** — 自动识别 PDF 的栏式布局
 
-## Installation
+- **卡片搜索筛选** — 实时关键词搜索 + 按类型过滤
 
-1. Download `magic-digest.xpi` from [Releases](https://github.com/Audanstu/zotero-magic-digest/releases)
-2. Open Zotero → Tools → Add-ons → gear icon → Install Add-on From File
-3. Select the XPI file
+- **批量操作** — 一键折叠/展开全部，隐藏未定位卡片
 
-## Setup
+- **连线定位** — 卡片与锚点之间的可视化连线
 
-1. Go to Edit → Settings → magic-digest
-2. Add a model configuration:
-   - **For text analysis**: DeepSeek (provider: openai-compatible, base: `https://api.deepseek.com`)
-   - **For vision analysis**: Volcengine Ark (provider: volcengine-responses) or Qwen VL (provider: openai-compatible)
-3. Set your default text model and default vision model
-4. Test the connection
+- **拖动调整** — 手动拖拽卡片位置
 
-## Usage
+- **多模型支持** — DeepSeek、火山引擎、千问、OpenAI 兼容 API
 
-### Quick Start
+- **后续功能敬请期待，请动手点一点star，以免后续找不到了**
 
-**Prerequisite:** First use **llm-for-zotero** to run MinerU analysis on your PDF (right-click → llm-for-zotero → MinerU 解析).
+  （更多功能star超10星再更新，主包最近得应付期末月和六级考试，可能得考完才能有时间更新）
 
-Right-click menu:
+## 安装要求
 
-| Menu | Purpose |
-|------|---------|
-| ✨ 生成全文结构化分析 | Main analysis: generates all insight cards |
-| ✨ 解析论文图表 | Vision analysis for all figures/tables |
-| ✨ 生成双语阅读卡 | Bilingual reading card draft |
-| ✨ 基于 Layout 重新生成定位卡片 | Regenerate card anchor positions |
+- Zotero 9.0.3（暂时因为主包的是这个版本，其他的版本不确定能不能用，也许能？）
+- **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** 插件 — 用于 MinerU PDF 版面解析（必须先安装）
+=======
+- 需搭配llm-for-zotero插件来使用（咱就不重复造轮子了）
 
-1. Select a PDF attachment or its parent item in Zotero
-2. Right-click → `magic-digest ✨：生成全文结构化分析`
-3. Wait for the analysis to complete
-4. Open the PDF and click the `my_vibero` button in the top-right toolbar
-5. Cards appear overlaid on the PDF, positioned next to their source text
+- 至少一个 AI API Key：（后面会支持更多模型）
+  - DeepSeek（文本分析）
+  - 火山引擎 Ark（文本 + 视觉分析）
+  - 千问 DashScope（视觉分析）
 
-### Card Operations
+## 安装
 
-| Action | How |
-|--------|-----|
-| Click card | Jump to anchor position |
-| Drag handle (↕) | Reposition card |
-| Double-click card | Reset to auto position |
-| Collapse/Expand | Click ▼/▶ button on card |
-| Search | Type in the search bar at top |
-| Type filter | Click type buttons (背景/方法/结果...) |
-| Collapse all | Click "折叠" button |
-| Delete card | Click × on card |
+1. 从 [Releases](https://github.com/Audanstu/zotero-magic-digest/releases) 下载 `magic-digest.xpi`
+2. Zotero → 工具 → 附加组件 → 齿轮 → 从文件安装附加组件
+3. 选择 XPI 文件
 
-## Data Storage
+## 配置
 
-All analysis data is stored in Zotero's data directory under `magic-digest-data/{attachmentID}/`:
+1. 编辑 → 设置 → magic-digest
+2. 添加模型配置：
+   - **文本分析**：DeepSeek（提供商：openai-compatible，地址：`https://api.deepseek.com`）
+   - **视觉分析**：火山引擎 Ark 或千问 VL
+3. 分别设为默认文本模型和默认视觉模型
+4. 点 Test 按钮测试连通性
 
-- `analysis.json` — Structured card data
-- `vision.json` — Vision figure analysis results
-- `reading-card-draft.md` — Reading card draft
-- `anchor-index-layout.json` — Anchor position index
+## 使用
 
-## Build from Source
+### 快速开始
 
-```bash
-npm install
-npm run build
-# XPI output: .scaffold/build/magic-digest.xpi
-```
+**前提：** 先用 **llm-for-zotero** 对 PDF 执行 MinerU 解析（右键 → llm-for-zotero → MinerU 解析）。
 
-## Credits
+1. 在 Zotero 中选中一个 PDF 附件或其父条目
+2. 右键 → `magic-digest ✨：生成全文结构化分析`
+3. 等待分析完成（约 1-2 分钟）
+4. 打开 PDF，点右上角工具栏的 `my_vibero` 按钮
+5. 卡片浮现在 PDF 上方，定位在原文旁边
 
-This plugin was developed with assistance from the **DeepSeek** AI model for code generation and design.
+### 卡片操作
 
-## License
+| 操作 | 方法 |
+|------|------|
+| 点击卡片 | 跳转到锚点位置 |
+| 拖动 ↕ 手柄 | 调整卡片位置 |
+| 双击卡片 | 恢复到自动位置 |
+| 折叠/展开 | 点卡片上的 ▼/▶ 按钮 |
+| 搜索 | 在顶部搜索框输入关键词 |
+| 类型过滤 | 点类型按钮（背景/方法/结果...） |
+| 折叠全部 | 点"折叠"按钮 |
+| 删除卡片 | 点卡片上的 × |
+
+## 数据存储
+
+所有分析数据存储在 Zotero 数据目录下的 `magic-digest-data/{附件ID}/`：
+
+- `analysis.json` — 结构化卡片数据
+- `vision.json` — 视觉图表分析结果
+- `reading-card-draft.md` — 阅读卡片草稿
+
+## 制作说明
+
+这是主包的第一个github项目，也是第一个与zotero相关的插件。
+本人能力有限，本插件的部分代码和设计由 **DeepSeek** AI 模型辅助完成。
+
+## 开源协议
 
 AGPL-3.0-or-later
 
 ---
 
-**Contributions welcome!** Feel free to open issues, submit PRs, or share your ideas — let's make magic-digest better together.
+**欢迎协作！** 欢迎提交 Issue、PR 或分享你的想法，一起把 magic-digest 做得更好。
 
 ---
 
-**Notice:** Please respect the author's work. Commercial use is not permitted without prior authorization. For commercial licensing, please contact via QQ: **2472932478** (state your purpose clearly).
+**声明：** 请尊重他人劳动成果，未经授权不得将本作品用于商业用途。如需商业合作，请通过 QQ **2472932478** 联系本人，并备注来意。
