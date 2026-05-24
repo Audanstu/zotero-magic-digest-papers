@@ -2939,6 +2939,19 @@ function getPageIndexFromPageElement(pageEl: Element, fallback: number): number 
   return fallback;
 }
 
+function collectPageSnippet(pageEl: Element, maxLen: number): string {
+  const spans = getTextLayerSpans(pageEl);
+  let text = "";
+  for (const el of spans) {
+    const t = String(el.textContent || "").trim();
+    if (t) {
+      text += (text ? " " : "") + t;
+      if (text.length >= maxLen) break;
+    }
+  }
+  return text.slice(0, maxLen);
+}
+
 function getTextLayerSpans(pageEl: Element): HTMLElement[] {
   const nodes = Array.from(
     pageEl.querySelectorAll(".textLayer span, .textLayer div"),
@@ -3126,13 +3139,21 @@ function autoLocateUnresolvedCards(
 
   if (!pageEls.length) return 0;
 
+  const totalUnresolvedBefore = (analysis.pageCards || []).reduce(
+    (sum, pc) => sum + [...(pc.left || []), ...(pc.right || [])].filter(isUnresolvedCard).length,
+    0,
+  );
+
   let located = 0;
+  let scanned = 0;
+  const failedSamples: string[] = [];
 
   for (const pc of analysis.pageCards || []) {
     const cards = [...(pc.left || []), ...(pc.right || [])];
 
     for (const card of cards) {
       if (!isUnresolvedCard(card)) continue;
+      scanned++;
 
       const needles = makeAutoLocateNeedles(card);
       if (!needles.length) continue;
@@ -3193,7 +3214,29 @@ function autoLocateUnresolvedCards(
         }
 
         located++;
+      } else {
+        // Collect failure samples for debugging
+        if (failedSamples.length < 5) {
+          const anchorText = String((card as any).anchorText || card.title || "").slice(0, 80);
+          const page = card.page ?? -1;
+          failedSamples.push(`p${page}: "${anchorText}"`);
+        }
       }
+    }
+  }
+
+  // Log diagnostics
+  if (totalUnresolvedBefore > 0) {
+    ztoolkit.log(
+      `magic_digest auto-locate: scanned ${scanned}, resolved ${located}/${totalUnresolvedBefore}. ` +
+      (failedSamples.length ? `Failed samples: ${failedSamples.join(" | ")}` : "All resolved")
+    );
+
+    // Dump first page text for debugging
+    const pageEls2 = Array.from(doc.querySelectorAll(".page")) as HTMLElement[];
+    if (pageEls2.length > 0) {
+      const p0Text = collectPageSnippet(pageEls2[0], 400);
+      ztoolkit.log(`magic_digest page-0 text (first 400 chars): ${p0Text}`);
     }
   }
 
