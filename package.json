@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "AI-powered academic paper reading assistant. Deep PDF integration with structured cards, vision figure analysis, and smart anchor positioning.",
   "update_url": "https://raw.githubusercontent.com/Audanstu/zotero-magic-digest/main/update.json",
+  "homepage": "https://github.com/Audanstu/zotero-magic-digest",
+  "author": "Audanstu",
   "config": {
     "addonName": "magic-digest",
     "addonID": "magic-digest@local",
@@ -15,11 +17,6 @@
     "type": "git",
     "url": "git+https://github.com/local/my_vibero.git"
   },
-  "author": "my_vibero",
-  "bugs": {
-    "url": "https://github.com/local/my_vibero/issues"
-  },
-  "homepage": "https://github.com/local/my_vibero#readme",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "start": "zotero-plugin serve",
