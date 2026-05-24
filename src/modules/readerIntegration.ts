@@ -216,12 +216,11 @@ function assignAutoSide(
       const xCenter = (rect[0] + rect[2]) / 2;
       return xCenter < 0.5 ? "left" : "right";
     }
+    // 双栏无锚点：保留 AI 原始分配
+    if (originalSide) return originalSide;
   }
 
-  // 单栏或无锚点：保留 AI 的原始分配（理解在左，结构在右）
-  if (originalSide) return originalSide;
-
-  // 兜底：交替分配
+  // 单栏：交替分配让两侧均匀；双栏兜底也交替
   return index % 2 === 0 ? "left" : "right";
 }
 
@@ -2859,11 +2858,14 @@ function enhanceCardBodyLayout(
 
 
 function normalizeForAutoLocate(text: string): string {
+  // Light normalization: lowercase, collapse whitespace, but KEEP most
+  // punctuation/operators since PDF text layer preserves them.
   return String(text || "")
     .toLowerCase()
-    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/[\u2010-\u2015]/g, "-") // Unicode hyphens → ASCII
+    .replace(/[\u2018\u2019]/g, "'")  // smart quotes → straight
+    .replace(/[\u201c\u201d]/g, '"')
     .replace(/\s+/g, " ")
-    .replace(/[^\p{L}\p{N}\s\-]/gu, "")
     .trim();
 }
 
@@ -3136,6 +3138,35 @@ function autoLocateUnresolvedCards(
   ) as HTMLElement[];
 
   if (!pageEls.length) return 0;
+
+  // 诊断：输出第一页文本和前 3 个搜索词到 Zotero.debug()
+  const diagLines: string[] = [];
+  const diagPage0 = pageEls[0];
+  if (diagPage0) {
+    diagLines.push("=== Page 0 (spaced) ===");
+    diagLines.push(collectPageSnippet(diagPage0, 800));
+    diagLines.push("=== Page 0 (concat) ===");
+    const spans0 = getTextLayerSpans(diagPage0);
+    let concat = "";
+    for (const s of spans0) concat += normalizeForAutoLocate(String(s.textContent || ""));
+    diagLines.push(concat.slice(0, 800));
+  }
+  diagLines.push("=== Sample needles ===");
+  let needleCount = 0;
+  for (const pc of analysis.pageCards || []) {
+    for (const card of [...(pc.left || []), ...(pc.right || [])]) {
+      if (!isUnresolvedCard(card)) continue;
+      const nds = makeAutoLocateNeedles(card);
+      if (nds.length && needleCount < 3) {
+        diagLines.push(`Card "${String(card.title).slice(0, 60)}" page=${card.page}:`);
+        for (const n of nds.slice(0, 5)) diagLines.push(`  needle: "${n.slice(0, 120)}"`);
+        needleCount++;
+      }
+    }
+    if (needleCount >= 3) break;
+  }
+  diagLines.push(`=== Total unresolved before: ${(analysis.pageCards || []).reduce((s, pc) => s + [...(pc.left || []), ...(pc.right || [])].filter(isUnresolvedCard).length, 0)} ===`);
+  (Zotero as any).debug(diagLines.join("\n"));
 
   let located = 0;
 
