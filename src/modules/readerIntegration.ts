@@ -2883,22 +2883,35 @@ function makeAutoLocateNeedles(card: MagicDigestCard): string[] {
 
   for (const c of candidates) {
     const normalized = normalizeForAutoLocate(String(c || ""));
-    if (normalized.length >= 12) {
+    if (normalized.length >= 8) {
       result.push(normalized.slice(0, 180));
     }
 
-    // For long English text, also try the first 8-16 words.
+    // Word-level sub-phrases: try first 2-8 words and last few words
     const words = normalized.split(/\s+/).filter(Boolean);
-    if (words.length >= 6) {
-      result.push(words.slice(0, Math.min(16, words.length)).join(" "));
-      result.push(words.slice(0, Math.min(10, words.length)).join(" "));
+    if (words.length >= 3) {
+      result.push(words.slice(0, Math.min(8, words.length)).join(" "));
+      result.push(words.slice(0, Math.min(5, words.length)).join(" "));
+      result.push(words.slice(0, Math.min(3, words.length)).join(" "));
+      if (words.length >= 6) {
+        result.push(words.slice(-5).join(" "));
+        result.push(words.slice(-3).join(" "));
+      }
+    }
+
+    // Character-level substrings
+    if (normalized.length > 24) {
+      result.push(normalized.slice(0, 24));
+    }
+    if (normalized.length > 16) {
+      result.push(normalized.slice(0, 16));
     }
   }
 
   return Array.from(new Set(result))
-    .filter((x) => x.length >= 12)
+    .filter((x) => x.length >= 8)
     .sort((a, b) => b.length - a.length)
-    .slice(0, 8);
+    .slice(0, 10);
 }
 
 function getPageIndexFromPageElement(pageEl: Element, fallback: number): number {
@@ -3005,17 +3018,69 @@ function locateNeedleOnPage(
   let start = pageText.indexOf(needle);
   let usedNeedle = needle;
 
-  // If exact long match fails, try shorter prefix.
-  if (start < 0 && needle.length > 60) {
-    const shortNeedle = needle.slice(0, 60).trim();
-    start = pageText.indexOf(shortNeedle);
-    usedNeedle = shortNeedle;
-  }
+  // Fast path: exact match
+  if (start >= 0) {
+    // exact match found, proceed below
+  } else {
+    // Word-level n-gram matching
+    const needleWords = needle.split(/\s+/).filter(Boolean);
+    const pageWords = pageText.split(/\s+/).filter(Boolean);
 
-  if (start < 0 && needle.length > 36) {
-    const shortNeedle = needle.slice(0, 36).trim();
-    start = pageText.indexOf(shortNeedle);
-    usedNeedle = shortNeedle;
+    if (needleWords.length >= 2 && pageWords.length >= needleWords.length) {
+      const ngramLen = Math.min(5, needleWords.length);
+      const minMatchCount = Math.max(2, Math.floor(needleWords.length * 0.5));
+
+      // Build n-grams from needle
+      const ngrams: string[] = [];
+      for (let i = 0; i <= needleWords.length - ngramLen; i++) {
+        ngrams.push(needleWords.slice(i, i + ngramLen).join(" "));
+      }
+      // Also add shorter leading n-grams
+      ngrams.push(needleWords.slice(0, Math.min(3, needleWords.length)).join(" "));
+      ngrams.push(needleWords.slice(0, Math.min(4, needleWords.length)).join(" "));
+
+      let bestPos = -1;
+      let bestScore = 0;
+
+      for (const ng of ngrams) {
+        const pos = pageText.indexOf(ng);
+        if (pos < 0) continue;
+
+        // Score: count how many needle words appear in a window around this position
+        const windowStart = Math.max(0, pos - 40);
+        const windowEnd = Math.min(pageText.length, pos + ng.length + 40);
+        const windowText = pageText.slice(windowStart, windowEnd);
+        const windowWords = windowText.split(/\s+/);
+
+        let score = 0;
+        for (const nw of needleWords) {
+          if (windowWords.some((w) => w === nw)) score++;
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestPos = pos;
+        }
+      }
+
+      if (bestPos >= 0 && bestScore >= minMatchCount) {
+        start = bestPos;
+        usedNeedle = pageText.slice(start, start + Math.min(needle.length, pageText.length - start));
+      }
+    }
+
+    // Short prefix fallback
+    if (start < 0 && needle.length > 36) {
+      const shortNeedle = needle.slice(0, 36).trim();
+      start = pageText.indexOf(shortNeedle);
+      usedNeedle = shortNeedle;
+    }
+
+    if (start < 0 && needle.length > 20) {
+      const shortNeedle = needle.slice(0, 20).trim();
+      start = pageText.indexOf(shortNeedle);
+      usedNeedle = shortNeedle;
+    }
   }
 
   if (start < 0) return null;
