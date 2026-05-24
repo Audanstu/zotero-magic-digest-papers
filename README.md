@@ -1,5 +1,7 @@
 # magic-digest
 
+> [English](README-en.md)
+
 AI 驱动的 Zotero 学术论文阅读助手。
 
 在 PDF 阅读器中直接生成结构化浮动卡片，支持图表视觉分析、智能锚点定位。

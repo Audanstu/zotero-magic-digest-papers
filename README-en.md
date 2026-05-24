@@ -1,6 +1,6 @@
 # magic-digest
 
-> [中文说明](README-zhCN.md)
+> [中文](README.md)
 
 AI-powered academic paper reading assistant for Zotero.
 
