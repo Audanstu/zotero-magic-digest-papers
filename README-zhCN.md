@@ -33,7 +33,7 @@ AI 驱动的 Zotero 学术论文阅读助手。
 - Zotero 9.0.3（暂时因为主包的是这个版本，其他的版本不确定能不能用，也许能？）
 - **[llm-for-zotero](https://github.com/secretwords/llm-for-zotero)** 插件 — 用于 MinerU PDF 版面解析（必须先安装）
 =======
-- 需搭配llm-for-zotero插件来使用
+- 需搭配llm-for-zotero插件来使用（咱就不重复造轮子了）
 
 - 至少一个 AI API Key：（后面会支持更多模型）
   - DeepSeek（文本分析）
@@ -60,15 +60,6 @@ AI 驱动的 Zotero 学术论文阅读助手。
 ### 快速开始
 
 **前提：** 先用 **llm-for-zotero** 对 PDF 执行 MinerU 解析（右键 → llm-for-zotero → MinerU 解析）。
-
-右键菜单：
-
-| 菜单 | 用途 |
-|------|------|
-| ✨ 生成全文结构化分析 | 分析全文，生成所有洞察卡片 |
-| ✨ 解析论文图表 | 对所有图表进行视觉分析 |
-| ✨ 生成双语阅读卡 | 中英双语阅读卡草稿 |
-| ✨ 基于 Layout 重新生成定位卡片 | 重新生成卡片锚点位置 |
 
 1. 在 Zotero 中选中一个 PDF 附件或其父条目
 2. 右键 → `magic-digest ✨：生成全文结构化分析`

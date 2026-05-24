@@ -98,7 +98,100 @@ function onShutdown(): void {
   delete Zotero[addon.data.config.addonInstance];
 }
 
+// === 静默执行函数（不弹窗，只返回结果） ===
+
+async function runAnalysisSilent(pw: any): Promise<string> {
+  return new Promise((resolve, reject) => {
+    generateAnalysisForSelectedItem((ev) => {
+      if (ev.stage === "chunk-failed") {
+        pw.createLine({ text: `⚠️ 分析: ${ev.message}`, type: "fail", progress: 0 });
+      }
+    })
+      .then((r) => resolve(`完成 (itemID ${r.attachmentItemID})`))
+      .catch(reject);
+  });
+}
+
+async function runFigureSilent(pw: any): Promise<string> {
+  const { analyzeFiguresForSelectedItem } = await import("./modules/figureAnalysis");
+  // 直接调用，由内部弹窗（可后续优化为静默）
+  return new Promise(async (resolve, reject) => {
+    try {
+      // analyzeFiguresForSelectedItem 内部会创建自己的弹窗，这里我们拦截不到
+      // 暂时让它弹自己的，但捕获异常
+      await analyzeFiguresForSelectedItem();
+      resolve("完成");
+    } catch (e: any) {
+      reject(e);
+    }
+  });
+}
+
+async function runReadingCardSilent(pw: any): Promise<string> {
+  const { generateReadingCardForSelectedItem } = await import("./modules/readingCard");
+  try {
+    await generateReadingCardForSelectedItem();
+    return "完成";
+  } catch (e: any) {
+    throw e;
+  }
+}
+
+async function runBlockFirstSilent(pw: any): Promise<string> {
+  const { generateBlockFirstCardsForSelectedItem } = await import("./modules/blockFirstLayoutCards");
+  try {
+    await generateBlockFirstCardsForSelectedItem();
+    return "完成";
+  } catch (e: any) {
+    throw e;
+  }
+}
+
 function registerMenus() {
+  // 0. 一键全部完成
+  ztoolkit.Menu.register("item", {
+    tag: "menuitem",
+    id: "zotero-itemmenu-magic-digest-full-auto",
+    label: "magic_digest ✨：一键全部完成",
+    commandListener: async () => {
+      const pw = new ztoolkit.ProgressWindow("magic_digest", {
+        closeOnClick: true,
+        closeTime: -1,
+      });
+
+      const tasks: Array<{ name: string; run: () => Promise<string> }> = [
+        { name: "全文结构化分析", run: () => runAnalysisSilent(pw) },
+        { name: "论文图表", run: () => runFigureSilent(pw) },
+        { name: "双语阅读卡", run: () => runReadingCardSilent(pw) },
+        { name: "Layout 定位卡片", run: () => runBlockFirstSilent(pw) },
+      ];
+
+      pw.createLine({ text: "一键全部完成：启动 4 项任务...", type: "default", progress: 1 }).show();
+
+      const results = await Promise.allSettled(
+        tasks.map((t) =>
+          t.run().then(
+            (msg) => ({ name: t.name, ok: true, msg }),
+            (e) => ({ name: t.name, ok: false, msg: e?.message || String(e) }),
+          ),
+        ),
+      );
+
+      for (const r of results) {
+        const v = (r as any).value || (r as any).reason || {};
+        if (v.ok) {
+          pw.createLine({ text: `✅ ${v.name}: ${v.msg}`, type: "success", progress: 95 });
+        } else {
+          pw.createLine({ text: `❌ ${v.name}: ${v.msg}`, type: "fail", progress: 95 });
+        }
+      }
+
+      pw.createLine({ text: "一键全部完成 ✅", type: "success", progress: 100 }).show();
+
+      setTimeout(() => { try { pw.close(); } catch { /* noop */ } }, 15000);
+    },
+  });
+
   // 1. 生成全文结构化分析
   ztoolkit.Menu.register("item", {
     tag: "menuitem",
