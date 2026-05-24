@@ -446,48 +446,58 @@ export async function analyzeFiguresForSelectedItem() {
       progress: 15,
     }).show();
 
-    const results: FigureAnalysisResult[] = [];
+    const CONCURRENCY = 3;
+    const results: FigureAnalysisResult[] = new Array(images.length);
 
-    for (let i = 0; i < images.length; i++) {
-      pw.createLine({
-        text: `Analyzing figure ${i + 1}/${images.length}: ${basename(images[i])}`,
-        type: "default",
-        progress: 15 + Math.round((i / images.length) * 70),
-      }).show();
+    // 并行分析，每次最多 CONCURRENCY 个并发
+    for (let batchStart = 0; batchStart < images.length; batchStart += CONCURRENCY) {
+      const batch = images
+        .slice(batchStart, batchStart + CONCURRENCY)
+        .map(async (img, offset) => {
+          const i = batchStart + offset;
+          try {
+            return await analyzeOneFigure(config, img, i);
+          } catch (e: any) {
+            const errMsg = e?.message || String(e);
+            let analysis = `Failed: ${errMsg}`;
 
-      try {
-        const r = await analyzeOneFigure(config, images[i], i);
-        results.push(r);
-      } catch (e: any) {
-        const errMsg = e?.message || String(e);
+            if (/too large|payload|size/i.test(errMsg)) {
+              analysis = `Failed: 图片过大，API 拒绝。请尝试在 MinerU 中降低图片分辨率。\n原始错误: ${errMsg}`;
+            } else if (/timeout|timed out/i.test(errMsg)) {
+              analysis = `Failed: 请求超时（120s）。图片可能过大或网络不稳定。\n原始错误: ${errMsg}`;
+            } else if (/unauthorized|key/i.test(errMsg)) {
+              analysis = `Failed: API Key 无效或未授权。请在 magic_digest 设置中检查 Vision Model 配置。\n原始错误: ${errMsg}`;
+            } else if (/network|fetch|dns|ENOTFOUND/i.test(errMsg)) {
+              analysis = `Failed: 网络连接失败。请检查网络或火山引擎 API 地址。\n原始错误: ${errMsg}`;
+            }
 
-        // 给出更有用的错误提示
-        let analysis = `Failed: ${errMsg}`;
-
-        if (/too large|payload|size/i.test(errMsg)) {
-          analysis = `Failed: 图片过大，API 拒绝。请尝试在 MinerU 中降低图片分辨率。\n原始错误: ${errMsg}`;
-        } else if (/timeout|timed out/i.test(errMsg)) {
-          analysis = `Failed: 请求超时（120s）。图片可能过大或网络不稳定。\n原始错误: ${errMsg}`;
-        } else if (/unauthorized|key/i.test(errMsg)) {
-          analysis = `Failed: API Key 无效或未授权。请在 magic_digest 设置中检查 Vision Model 配置。\n原始错误: ${errMsg}`;
-        } else if (/network|fetch|dns|ENOTFOUND/i.test(errMsg)) {
-          analysis = `Failed: 网络连接失败。请检查网络或火山引擎 API 地址。\n原始错误: ${errMsg}`;
-        }
-
-        results.push({
-          id: `figure-${i + 1}`,
-          file: images[i],
-          fileName: basename(images[i]),
-          model: {
-            id: config.id,
-            name: config.name,
-            model: config.model,
-            baseURL: config.baseURL,
-          },
-          analysis,
-          createdAt: new Date().toISOString(),
+            return {
+              id: `figure-${i + 1}`,
+              file: img,
+              fileName: basename(img),
+              model: {
+                id: config.id,
+                name: config.name,
+                model: config.model,
+                baseURL: config.baseURL,
+              },
+              analysis,
+              createdAt: new Date().toISOString(),
+            };
+          }
         });
+
+      const batchResults = await Promise.all(batch);
+      for (let j = 0; j < batchResults.length; j++) {
+        results[batchStart + j] = batchResults[j];
       }
+
+      const completed = batchStart + batch.length;
+      pw.createLine({
+        text: `Analyzing figures: ${completed}/${images.length} done`,
+        type: "default",
+        progress: 15 + Math.round((completed / images.length) * 70),
+      }).show();
     }
 
     const dirs = collectCandidateDirs(output);
