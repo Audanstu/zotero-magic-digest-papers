@@ -48,6 +48,15 @@ Deep PDF integration with structured floating cards, vision figure analysis, and
 
 **Prerequisite:** First use **llm-for-zotero** to run MinerU analysis on your PDF (right-click → llm-for-zotero → MinerU 解析).
 
+Right-click menu:
+
+| Menu | Purpose |
+|------|---------|
+| ✨ 生成全文结构化分析 | Main analysis: generates all insight cards |
+| ✨ 解析论文图表 | Vision analysis for all figures/tables |
+| ✨ 生成双语阅读卡 | Bilingual reading card draft |
+| ✨ 基于 Layout 重新生成定位卡片 | Regenerate card anchor positions |
+
 1. Select a PDF attachment or its parent item in Zotero
 2. Right-click → `magic-digest ✨：生成全文结构化分析`
 3. Wait for the analysis to complete
