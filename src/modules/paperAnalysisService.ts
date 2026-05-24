@@ -643,6 +643,10 @@ export async function generateAnalysisForSelectedItem(
           .join(", ")}`,
       ];
 
+      const analysisLang = String(
+        (Zotero.Prefs.get("extensions.zotero.my_vibero.analysisLanguage", true) || ""),
+      ).trim() === "en" ? "en" as const : "zh" as const;
+
       const prompt = buildChunkPaperAnalysisPrompt({
         title: inputBundle.title,
         chunkIndex: i,
@@ -653,6 +657,7 @@ export async function generateAnalysisForSelectedItem(
         manifestSummary: `${inputBundle.rawManifestSummary}\n\n${manifestSummaryLines.join(
           "\n",
         )}`,
+        language: analysisLang,
       });
 
       batchTasks.push(

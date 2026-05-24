@@ -28,6 +28,7 @@ export function buildChunkPaperAnalysisPrompt(params: {
   figures: ChunkFigure[];
   tables: ChunkTable[];
   manifestSummary: string;
+  language?: "zh" | "en";
 }): string {
   const pageList = params.pages
     .map(
@@ -157,5 +158,11 @@ ${tables || "None"}
 
 # Page texts in current chunk
 ${pageList}
+
+## Language
+${params.language === "en"
+    ? `Reply in English ONLY. All card titles, content, globalPanel, tags MUST be in English. Do NOT use Chinese.`
+    : `Reply in Chinese ONLY. 所有卡片标题、内容、globalPanel、标签必须使用中文。不要使用英文。`
+}
 `.trim();
 }

@@ -4225,6 +4225,38 @@ export function registerReaderIntegration() {
         });
       });
 
+      // 中/英语言切换按钮
+      const langPrefKey = "extensions.zotero.my_vibero.analysisLanguage";
+      const getLang = () => {
+        const v = String(Zotero.Prefs.get(langPrefKey, true) || "").trim();
+        return v === "en" ? "en" : "zh";
+      };
+      const langBtn = doc.createElement("button");
+      const updateLangBtn = () => {
+        langBtn.textContent = getLang() === "en" ? "EN" : "中";
+        langBtn.title = getLang() === "en" ? "Switch to Chinese analysis" : "切换为英文分析";
+      };
+      updateLangBtn();
+      langBtn.setAttribute(
+        "style",
+        [
+          "font-size:12px",
+          "padding:3px 8px",
+          "margin-left:4px",
+          "border-radius:6px",
+          "border:1px solid #475569",
+          "background:#1e293b",
+          "color:#e2e8f0",
+          "cursor:pointer",
+        ].join(";"),
+      );
+      langBtn.addEventListener("click", () => {
+        const next = getLang() === "en" ? "zh" : "en";
+        Zotero.Prefs.set(langPrefKey, next, true);
+        updateLangBtn();
+      });
+      container.appendChild(langBtn);
+
       container.appendChild(btn);
       append(container);
 
