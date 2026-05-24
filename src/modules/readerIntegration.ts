@@ -210,17 +210,14 @@ function assignAutoSide(
   index: number,
   originalSide?: "left" | "right",
 ): "left" | "right" {
-  if (layout === "double") {
-    const rect = getAnchorRect(card);
-    if (rect) {
-      const xCenter = (rect[0] + rect[2]) / 2;
-      return xCenter < 0.5 ? "left" : "right";
-    }
-    // 双栏无锚点：保留 AI 原始分配
-    if (originalSide) return originalSide;
+  const rect = getAnchorRect(card);
+  if (rect) {
+    // 有锚点 → 根据位置精确判断列
+    const xCenter = (rect[0] + rect[2]) / 2;
+    return xCenter < 0.5 ? "left" : "right";
   }
 
-  // 单栏：交替分配让两侧均匀；双栏兜底也交替
+  // 无锚点 → 交替分配，无论单栏还是双栏
   return index % 2 === 0 ? "left" : "right";
 }
 
