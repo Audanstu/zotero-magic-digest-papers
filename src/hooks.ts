@@ -50,16 +50,11 @@ function registerMagicDigestPreferencePane() {
 }
 
 import { createZToolkit } from "./utils/ztoolkit";
-import { openSettingsDialog } from "./modules/settingsDialog";
-import { testMineruCacheForSelectedItem } from "./modules/magicDigest";
-import { testDeepSeekConnection } from "./modules/deepseekClient";
 import { generateReadingCardForSelectedItem } from "./modules/readingCard";
 import {
   formatAnalysisError,
   generateAnalysisForSelectedItem,
 } from "./modules/paperAnalysisService";
-import { openReadingWorkbench } from "./modules/workbenchUI";
-import { testMagicDigestDefaultModelFromMenu } from "./modules/defaultModelTest";
 import { generateBlockFirstCardsForSelectedItem } from "./modules/blockFirstLayoutCards";
 import { analyzeFiguresForSelectedItem } from "./modules/figureAnalysis";
 import {
@@ -104,106 +99,7 @@ function onShutdown(): void {
 }
 
 function registerMenus() {
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-figure-analysis",
-    label: "magic_digest ✨：解析论文图表",
-    commandListener: async () => {
-      await analyzeFiguresForSelectedItem();
-    },
-  });
-
-
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-block-first-cards",
-    label: "magic_digest ✨：基于 Layout 重新生成定位卡片",
-    commandListener: async () => {
-      await generateBlockFirstCardsForSelectedItem();
-    },
-  });
-
-
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-default-model-test",
-    label: "magic_digest ✨：测试默认模型调用",
-    commandListener: async () => {
-      await testMagicDigestDefaultModelFromMenu();
-    },
-  });
-
-
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-open-settings",
-    label: "magic_digest ✨：打开设置",
-    commandListener: () => {
-      openSettingsDialog();
-    },
-  });
-
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-cache-test",
-    label: "magic_digest ✨：读取 llm-for-zotero MinerU 缓存",
-    commandListener: () => {
-      testMineruCacheForSelectedItem();
-    },
-  });
-
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-deepseek-test",
-    label: "magic_digest ✨：测试 DeepSeek 连通性",
-    commandListener: async () => {
-      try {
-        const result = await testDeepSeekConnection();
-
-        new ztoolkit.ProgressWindow("magic_digest", {
-          closeOnClick: true,
-          closeTime: 8000,
-        })
-          .createLine({
-            text: "DeepSeek 连通成功 ✅",
-            type: "success",
-            progress: 40,
-          })
-          .createLine({
-            text: `model: ${result.model}`,
-            type: "default",
-            progress: 70,
-          })
-          .createLine({
-            text: result.content,
-            type: "default",
-            progress: 100,
-          })
-          .show();
-      } catch (e: any) {
-        new ztoolkit.ProgressWindow("magic_digest", {
-          closeOnClick: true,
-          closeTime: 10000,
-        })
-          .createLine({
-            text: `DeepSeek 连通失败：${e?.message || String(e)}`,
-            type: "fail",
-            progress: 100,
-          })
-          .show();
-      }
-    },
-  });
-
-  ztoolkit.Menu.register("item", {
-    tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-reading-card",
-    label: "magic_digest ✨：生成双语阅读卡",
-    commandListener: async () => {
-      await generateReadingCardForSelectedItem();
-    },
-  });
-
+  // 1. 生成全文结构化分析
   ztoolkit.Menu.register("item", {
     tag: "menuitem",
     id: "zotero-itemmenu-magic-digest-generate-analysis",
@@ -276,62 +172,33 @@ function registerMenus() {
     },
   });
 
+  // 2. 解析论文图表
   ztoolkit.Menu.register("item", {
     tag: "menuitem",
-    id: "zotero-itemmenu-magic-digest-open-workbench",
-    label: "magic_digest ✨：打开外部阅读工作台",
+    id: "zotero-itemmenu-magic-digest-figure-analysis",
+    label: "magic_digest ✨：解析论文图表",
     commandListener: async () => {
-      const win = Zotero.getMainWindow();
-      const item = win.ZoteroPane.getSelectedItems()?.[0];
+      await analyzeFiguresForSelectedItem();
+    },
+  });
 
-      if (!item) {
-        new ztoolkit.ProgressWindow("magic_digest", {
-          closeOnClick: true,
-          closeTime: 4000,
-        })
-          .createLine({
-            text: "请先选中一篇已分析的文献或 PDF 附件",
-            type: "fail",
-            progress: 100,
-          })
-          .show();
-        return;
-      }
+  // 3. 生成双语阅读卡
+  ztoolkit.Menu.register("item", {
+    tag: "menuitem",
+    id: "zotero-itemmenu-magic-digest-reading-card",
+    label: "magic_digest ✨：生成双语阅读卡",
+    commandListener: async () => {
+      await generateReadingCardForSelectedItem();
+    },
+  });
 
-      try {
-        const { resolveLlmForZoteroMineruOutputForItem } = await import(
-          "./modules/llmForZoteroMineruProvider"
-        );
-
-        const output = await resolveLlmForZoteroMineruOutputForItem(item);
-
-        if (!output) {
-          new ztoolkit.ProgressWindow("magic_digest", {
-            closeOnClick: true,
-            closeTime: 5000,
-          })
-            .createLine({
-              text: "未找到 llm-for-zotero MinerU 缓存，请先解析该 PDF",
-              type: "fail",
-              progress: 100,
-            })
-            .show();
-          return;
-        }
-
-        await openReadingWorkbench(output.attachmentItemID);
-      } catch (e: any) {
-        new ztoolkit.ProgressWindow("magic_digest", {
-          closeOnClick: true,
-          closeTime: 8000,
-        })
-          .createLine({
-            text: `打开外部阅读工作台失败：${e?.message || String(e)}`,
-            type: "fail",
-            progress: 100,
-          })
-          .show();
-      }
+  // 4. 基于 Layout 重新生成定位卡片
+  ztoolkit.Menu.register("item", {
+    tag: "menuitem",
+    id: "zotero-itemmenu-magic-digest-block-first-cards",
+    label: "magic_digest ✨：基于 Layout 重新生成定位卡片",
+    commandListener: async () => {
+      await generateBlockFirstCardsForSelectedItem();
     },
   });
 }
