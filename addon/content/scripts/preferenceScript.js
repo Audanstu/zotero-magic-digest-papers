@@ -16,8 +16,8 @@
 
   const MAX = 8;
   const DEFAULT_SLOTS = 3;
-  const PREF_CONFIGS = "extensions.magic_digest.modelConfigs";
-  const PREF_DEFAULT = "extensions.magic_digest.defaultModelId";
+  const PREF_CONFIGS = "extensions.my_vibero.modelConfigs";
+  const PREF_DEFAULT = "extensions.my_vibero.defaultModelId";
 
   function now() {
     return new Date().toISOString();

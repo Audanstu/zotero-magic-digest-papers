@@ -50,9 +50,9 @@ function normalizeBaseURL(baseURL: string): string {
   return String(baseURL || "").trim().replace(/\/+$/, "");
 }
 
-const PREF_MODEL_CONFIGS = "extensions.magic_digest.modelConfigs";
-const PREF_DEFAULT_MODEL_ID = "extensions.magic_digest.defaultModelId";
-const PREF_DEFAULT_VISION_MODEL_ID = "extensions.magic_digest.defaultVisionModelId";
+const PREF_MODEL_CONFIGS = "extensions.my_vibero.modelConfigs";
+const PREF_DEFAULT_MODEL_ID = "extensions.my_vibero.defaultModelId";
+const PREF_DEFAULT_VISION_MODEL_ID = "extensions.my_vibero.defaultVisionModelId";
 
 function getPrefs(): any {
   return (globalThis as any).Zotero?.Prefs || Zotero?.Prefs;
