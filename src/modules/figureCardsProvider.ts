@@ -599,12 +599,14 @@ function mergeCardsIntoAnalysis(
     pageCards: [...(analysis.pageCards || [])],
   };
 
-  const existingIDs = new Set<string>();
-
+  // 先移除所有同 ID 的旧卡片（支持重新运行覆盖）
   for (const page of cloned.pageCards) {
-    for (const c of [...(page.left || []), ...(page.right || [])]) {
-      existingIDs.add(c.id);
-    }
+    page.right = (page.right || []).filter(
+      (c) => !cards.some((nc) => nc.id === c.id),
+    );
+    page.left = (page.left || []).filter(
+      (c) => !cards.some((nc) => nc.id === c.id),
+    );
   }
 
   for (const card of cards) {
@@ -620,10 +622,7 @@ function mergeCardsIntoAnalysis(
       cloned.pageCards.push(pageBucket);
     }
 
-    if (!existingIDs.has(card.id)) {
-      pageBucket.right.push(card);
-      existingIDs.add(card.id);
-    }
+    pageBucket.right.push(card);
   }
 
   cloned.pageCards.sort((a, b) => a.page - b.page);

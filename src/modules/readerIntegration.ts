@@ -856,6 +856,39 @@ function setCardEdited(
   card.tags = params.tags;
 }
 
+function renderLightMarkdownInline(md: string): string {
+  if (!md) return "";
+
+  let html = escapeHTML(md);
+
+  // Inline: bold, italic, code, strikethrough, links
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Italic: *text* but not ** (already handled as bold)
+  html = html.replace(/\B\*([^*]+)\*\B/g, "<em>$1</em>");
+  html = html.replace(/`([^`]+)`/g, "<code style='background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:10px;'>$1</code>");
+  html = html.replace(/~~(.+?)~~/g, "<s>$1</s>");
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#2563eb;">$1</a>');
+
+  // Headings: ###, ##
+  html = html.replace(/^### (.+)$/gm, "<h4 style='font-size:12px;margin:6px 0 2px;color:#0f172a;'>$1</h4>");
+  html = html.replace(/^## (.+)$/gm, "<h3 style='font-size:12.5px;margin:6px 0 2px;color:#0f172a;border-bottom:1px solid #cbd5e1;'>$1</h3>");
+
+  // Unordered list items: - item, * item
+  html = html.replace(/^(?:[-*])\s+(.+)$/gm, "<li style='margin-left:12px;'>$1</li>");
+
+  // Wrap adjacent <li> in <ul>
+  html = html.replace(/((?:<li[^>]*>.*?<\/li>\s*)+)/g, "<ul style='margin:2px 0;padding:0;'>$1</ul>");
+
+  // Paragraphs: double newline → <p>
+  html = html.replace(/\n\n+/g, "</p><p style='margin:4px 0;'>");
+  html = "<p style='margin:4px 0;'>" + html + "</p>";
+
+  // Clean up empty paragraphs
+  html = html.replace(/<p[^>]*>\s*<\/p>/g, "");
+
+  return html;
+}
+
 function renderFloatingCardHTML(card: MagicDigestCard, doc?: Document): string {
   const color = cardTypeColor(card.type);
   const text = getCardText(card);
@@ -922,8 +955,8 @@ function renderFloatingCardHTML(card: MagicDigestCard, doc?: Document): string {
           : ""
       }
 
-      <div style="font-size:11px;line-height:1.45;color:#1e293b;max-height:86px;overflow:hidden;">
-        ${escapeHTML(text || "")}
+      <div class="magic-digest-md-body" style="font-size:11px;line-height:1.5;color:#1e293b;">
+        ${renderLightMarkdownInline(text || "")}
       </div>
     </div>
 
@@ -2815,9 +2848,10 @@ function enhanceCardBodyLayout(
   card: MagicDigestCard,
   doc: Document,
 ): void {
-  // 卡片整体允许更高，但内部滚动，避免卡片无限变长
-  el.style.maxHeight = "260px";
-  el.style.overflow = "hidden";
+  // 卡片允许滚动，但限制最大高度
+  el.style.maxHeight = "300px";
+  el.style.overflowY = "auto";
+  el.style.overflowX = "hidden";
 
   const extra = el.querySelector(".magic-digest-card-extra") as HTMLElement | null;
 
@@ -3923,8 +3957,9 @@ const pageCards = analysis.pageCards || [];
           "position:fixed",
           `width:${CARD_WIDTH}px`,
           "min-height:62px",
-          "max-height:260px",
-          "overflow:hidden",
+          "max-height:300px",
+          "overflow-y:auto",
+          "overflow-x:hidden",
           "background:rgba(241,245,249,.90)",
           "backdrop-filter:blur(4px)",
           "-moz-backdrop-filter:blur(4px)",

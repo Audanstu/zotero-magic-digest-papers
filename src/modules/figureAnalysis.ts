@@ -156,6 +156,55 @@ function looksLikeFigureImage(path: string): boolean {
   return isImageFile(path);
 }
 
+const PATHOLOGY_KEYWORDS = [
+  "he染色", "h&e", "h&e染色", "苏木精", "伊红", "免疫组化", "ihc",
+  "组织切片", "病理切片", "显微", "镜下", "肿瘤细胞", "癌细胞",
+  "histopathology", "pathology", "tissue section", "microscopy",
+  "hematoxylin", "eosin", "immunohistochemistry", "mitosis",
+  "腺体", "上皮", "间质", "浸润", "坏死", "核分裂", "增生",
+  "全切片", "wsi", "whole slide image", "放大倍", "×",
+];
+
+function looksLikePathologyContext(markdown: string, imageFileName: string): boolean {
+  if (!markdown || !imageFileName) return false;
+
+  const lowerMD = markdown.toLowerCase();
+  const base = basename(imageFileName).toLowerCase().replace(/\.[^.]+$/, "");
+
+  // 如果图片路径或文件名包含病理关键词
+  for (const kw of PATHOLOGY_KEYWORDS) {
+    if (base.includes(kw.toLowerCase())) return true;
+  }
+
+  // 检查 full.md 中图片引用附近的上下文
+  // 图片在 markdown 中通常以 ![...](filename) 或 <img src="filename"> 形式出现
+  const imgPatterns = [
+    new RegExp(`!\\[([^\\]]*)\\]\\([^)]*${escapeRegex(base)}[^)]*\\)`, "gi"),
+    new RegExp(`<img[^>]*${escapeRegex(base)}[^>]*>`, "gi"),
+  ];
+
+  for (const pat of imgPatterns) {
+    let match: RegExpExecArray | null;
+    while ((match = pat.exec(lowerMD)) !== null) {
+      // 取图片引用前后各 300 字符
+      const idx = match.index;
+      const ctxStart = Math.max(0, idx - 300);
+      const ctxEnd = Math.min(lowerMD.length, idx + match[0].length + 300);
+      const ctx = lowerMD.slice(ctxStart, ctxEnd);
+
+      for (const kw of PATHOLOGY_KEYWORDS) {
+        if (ctx.includes(kw.toLowerCase())) return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 async function findFigureImages(output: any): Promise<string[]> {
   const dirs = collectCandidateDirs(output);
   const files: string[] = [];
@@ -480,7 +529,7 @@ export async function analyzeFiguresForSelectedItem() {
       throw new Error("No MinerU cache found. Please parse this PDF with llm-for-zotero/MinerU first.");
     }
 
-    const images = await findFigureImages(output);
+    let images = await findFigureImages(output);
 
     if (!images.length) {
       throw new Error(
@@ -496,6 +545,34 @@ export async function analyzeFiguresForSelectedItem() {
       type: "default",
       progress: 15,
     }).show();
+
+    // 过滤病理图片（HE染色、组织切片、显微等）
+    const fullMD = String(output.fullMarkdown || "");
+    let skippedPathology = 0;
+    if (fullMD) {
+      const filtered: string[] = [];
+      for (const img of images) {
+        if (looksLikePathologyContext(fullMD, img)) {
+          skippedPathology++;
+        } else {
+          filtered.push(img);
+        }
+      }
+      if (skippedPathology > 0) {
+        pw.createLine({
+          text: `Skipped ${skippedPathology} pathology images`,
+          type: "default",
+          progress: 15,
+        }).show();
+      }
+      images = filtered;
+    }
+
+    if (!images.length) {
+      throw new Error(
+        `All images were skipped (${skippedPathology} pathology figures). Nothing to analyze.`,
+      );
+    }
 
     const CONCURRENCY = Math.min(8, Math.ceil(images.length / 2));
     const results: FigureAnalysisResult[] = new Array(images.length);
