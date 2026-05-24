@@ -341,7 +341,7 @@ async function analyzeOneFigure(
         mimeType: compressed.mimeType,
         prompt,
         temperature: 0,
-        timeoutMs: 120000,
+        timeoutMs: 60000,
       });
 
       return {
@@ -417,6 +417,57 @@ export async function analyzeFiguresForSelectedItem() {
   });
 
   pw.createLine({
+    text: "Verifying vision API connectivity...",
+    type: "default",
+    progress: 3,
+  }).show();
+
+  // 预检连通性
+  try {
+    const fetchFn = (globalThis as any).fetch;
+    if (typeof fetchFn !== "function") {
+      throw new Error("当前 Zotero 环境不支持 fetch。请检查 Zotero 7 版本（需 7.0+）。");
+    }
+
+    const baseURL = String(config.baseURL || "").trim().replace(/\/+$/, "");
+    const healthURL = baseURL + "/models";
+
+    const AbortCtor = (globalThis as any).AbortController;
+    const controller = AbortCtor ? new AbortCtor() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), 15000) : null;
+
+    const resp = await fetchFn(healthURL, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${config.apiKey}` },
+      signal: controller?.signal,
+    });
+
+    if (timer) clearTimeout(timer);
+
+    if (!resp.ok && resp.status !== 404) {
+      // 404 = endpoint exists but /models not supported — that's OK
+      throw new Error(
+        `API 返回 HTTP ${resp.status}。可能 API Key 无效或 Base URL 错误。\n` +
+        `当前 Base URL: ${baseURL}\n请在设置中检查 Vision Model 配置。`,
+      );
+    }
+  } catch (e: any) {
+    if (e.name === "AbortError") {
+      throw new Error(
+        `API 连通性检查超时（15s）。\n当前 Base URL: ${config.baseURL}\n请确认网络可达，或检查代理/VPN 设置。`,
+      );
+    }
+    const msg = String(e?.message || e);
+    if (/fetch|network|ENOTFOUND|dns/i.test(msg)) {
+      throw new Error(
+        `无法连接 Vision API。\n当前 Base URL: ${config.baseURL}\n请检查：\n1. 网络连接是否正常\n2. API 地址是否有防火墙阻挡\n3. 是否需要代理/VPN\n原始错误: ${msg.slice(0, 200)}`,
+      );
+    }
+    // 其他错误（如 401/403）按正常抛出
+    if (msg.includes("API 返回")) throw e;
+  }
+
+  pw.createLine({
     text: "Searching MinerU figure images...",
     type: "default",
     progress: 5,
@@ -446,7 +497,7 @@ export async function analyzeFiguresForSelectedItem() {
       progress: 15,
     }).show();
 
-    const CONCURRENCY = 3;
+    const CONCURRENCY = Math.min(8, Math.ceil(images.length / 2));
     const results: FigureAnalysisResult[] = new Array(images.length);
 
     // 并行分析，每次最多 CONCURRENCY 个并发
